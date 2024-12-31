@@ -42,16 +42,8 @@ namespace WindTunnel_Client
 
 
             // creating udp "connection" to send the video
-            /*
-            Socket Udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-            EndPoint EN = new IPEndPoint(IPAddress.Loopback, 3000);
-            byte[] gg =new byte[1024];
-            Udp.SendTo(Encoding.UTF8.GetBytes(""), EN);
-            Udp.ReceiveFrom(gg, ref EN);
-
-            Console.WriteLine(Encoding.UTF8.GetString(gg) + $" {EN.ToString()}");
-            */
+            
+            
 
 
             try
@@ -87,19 +79,26 @@ namespace WindTunnel_Client
 
                 RsaEncryption.SetServerPublicKey(Encoding.UTF8.GetString(ServerpublicKey, 0, bytesRec));
 
-
-                byte[] Message = RsaEncryption.EncryptToServer(Encoding.UTF8.GetBytes(Console.ReadLine()));
+                string massage = Console.ReadLine();
+                byte[] Message = RsaEncryption.EncryptToServer(Encoding.UTF8.GetBytes(massage));
                 byte[] bytes = Encoding.UTF8.GetBytes(Message.Length.ToString());
                 ClientSock.Send(bytes);
                 Thread.Sleep(200);
                 ClientSock.Send(Message);
 
 
+                Thread.Sleep(100);
+                Socket Udp = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
+                EndPoint EN = new IPEndPoint(IPAddress.Loopback, 65000);
+                Udp.SendTo(RsaEncryption.EncryptToServer(Encoding.UTF8.GetBytes($"{massage.Split(';')[0]}")), EN);
+
+                Console.WriteLine($"Sent => {massage.Split(';')[0]}..... udp packege to Server....... from =>  ${Udp.LocalEndPoint.ToString()}");
+                
 
 
-
-
-            } catch (Exception ex) 
+            }
+            catch (Exception ex) 
             { }
         }
     }
