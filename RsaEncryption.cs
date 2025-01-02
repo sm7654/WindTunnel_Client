@@ -12,6 +12,7 @@ namespace WindTunnel_Client
         private static string publicKey;
         private static string privateKey;
         private static string ServerPublickey;
+        private static string MicroPublickey;
         private static RSA Service;
 
         public static byte[] GenerateKeys()
@@ -38,10 +39,20 @@ namespace WindTunnel_Client
 
             return Service.Encrypt(data, RSAEncryptionPadding.Pkcs1);
         }
+        public static byte[] EncryptToMicro(byte[] data)
+        {
+            Service = RSA.Create();
+            Service.FromXmlString(MicroPublickey);
 
+            return Service.Encrypt(data, RSAEncryptionPadding.Pkcs1);
+        }
         public static void SetServerPublicKey(string Temppublickey)
         {
             ServerPublickey = Temppublickey;
+        }
+        public static void SetMicroPublicKey(string Temppublickey)
+        {
+            MicroPublickey = Temppublickey;
         }
     }
 }

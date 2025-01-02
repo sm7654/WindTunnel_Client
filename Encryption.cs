@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,20 +11,30 @@ namespace WindTunnel_Client
 {
     static class Encryption
     {
-        private static Aes aesAlg;
         private static byte[] AESkey;
         private static byte[] AESiv;
-        public static void GenerateKeys()
+        public static (byte[], byte[]) GenerateKeys()
         {
-            aesAlg = Aes.Create();
-            aesAlg.KeySize = 256;
-            aesAlg.GenerateKey();
-            aesAlg.GenerateIV();
-            AESkey = aesAlg.Key;
-            AESiv = aesAlg.IV;
+            try
+            {
+                using (Aes aesServise = Aes.Create())
+                {
+                    aesServise.KeySize = 192;
+                    AESkey = aesServise.Key;
+                    AESiv = aesServise.IV;
 
-        }
+                }
+                byte[] aesKeyBytes = RsaEncryption.EncryptToMicro(AESkey.ToArray());
+                byte[] aesIvBytes = RsaEncryption.EncryptToMicro(AESiv.ToArray());
+                
+                return (aesKeyBytes, aesIvBytes);
+            }
 
+            catch (Exception e)
+            {
+                return (null,null);
+            }
+         }
 
     }
 }

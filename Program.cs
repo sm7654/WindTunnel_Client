@@ -6,8 +6,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-using System.Linq;
+using System.Security.Cryptography;
+using System.IO;
 
 namespace WindTunnel_Client
 {
@@ -26,23 +26,19 @@ namespace WindTunnel_Client
         }
 
 
+        
+
 
         static void Main(string[] args)
         {
 
             
 
-
-            Encryption.GenerateKeys();
-            
-            
             IPAddress iP = IPAddress.Parse("127.0.0.1");
 
             int ServerPort = 65000;
 
 
-            // creating udp "connection" to send the video
-            
             
 
 
@@ -74,10 +70,12 @@ namespace WindTunnel_Client
 
                 ClientSock.Send(RsaEncryption.GenerateKeys());
 
-                byte[] ServerpublicKey = new byte[1024];
-                int bytesRec = ClientSock.Receive(ServerpublicKey);
+                byte[] publicKey = new byte[1024];
+                int bytesRec = ClientSock.Receive(publicKey);
 
-                RsaEncryption.SetServerPublicKey(Encoding.UTF8.GetString(ServerpublicKey, 0, bytesRec));
+                RsaEncryption.SetServerPublicKey(Encoding.UTF8.GetString(publicKey, 0, bytesRec));
+
+
 
                 string massage = Console.ReadLine();
                 byte[] Message = RsaEncryption.EncryptToServer(Encoding.UTF8.GetBytes(massage));
@@ -93,10 +91,23 @@ namespace WindTunnel_Client
                 EndPoint EN = new IPEndPoint(IPAddress.Loopback, 65000);
                 Udp.SendTo(RsaEncryption.EncryptToServer(Encoding.UTF8.GetBytes($"{massage.Split(';')[0]}")), EN);
 
-                Console.WriteLine($"Sent => {massage.Split(';')[0]}..... udp packege to Server....... from =>  ${Udp.LocalEndPoint.ToString()}");
+                bytesRec = ClientSock.Receive(publicKey);
+                byte[] publickeyLengthBytes = new byte[int.Parse(Encoding.UTF8.GetString(publicKey, 0, bytesRec))];
+                ClientSock.Receive(publicKey);
+                RsaEncryption.SetMicroPublicKey(Encoding.UTF8.GetString(publicKey));
+
+
+                (byte[] aesKey, byte[] aesIv) = Encryption.GenerateKeys();
+
                 
+                ClientSock.Send(aesKey);
+
+                Thread.Sleep(200);
+                ClientSock.Send(aesIv);
 
 
+
+                
             }
             catch (Exception ex) 
             { }
